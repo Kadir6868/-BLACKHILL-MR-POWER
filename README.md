@@ -1,6 +1,6 @@
 # BLACKHILL · MR. POWER V2 FREE
 
-Ücretsiz kullanım kotalarına uygun, çok dilli yapay zekâ sohbeti, tarayıcı TTS/mikrofon, D1 araştırma arşivi ve Cloudflare Worker API.
+Ücretsiz kullanım kotalarına uygun, çok dilli yapay zekâ sohbeti, tarayıcı TTS/mikrofon, D1 araştırma cu arşivi ve Cloudflare Worker API.
 
 ## Kurulum
 
@@ -23,3 +23,102 @@
 - Araştırma belgeleri otomatik olarak dahil değildir; arşive gerçek içerikleri yüklemeniz gerekir.
 - Yönetici token'ı tek paylaşılan sırdır, tam kullanıcı/rol sistemi değildir. Kamuya açık dağıtım öncesi Cloudflare Access ekleyin.
 - `ALLOWED_ORIGIN` tarayıcı CORS kontrolüdür, tek başına kimlik doğrulama değildir.
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLACKHILL — Mr. Power AI</title>
+    <style>
+        :root {
+            --bg-color: #0d0d0f;
+            --card-bg: #16161a;
+            --border-color: #27272a;
+            --accent-color: #e5a93b;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-container {
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .hero-container h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .hero-container h1 span {
+            color: var(--accent-color);
+        }
+
+        .hero-container p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .btn-portal {
+            background-color: var(--accent-color);
+            color: #0d0d0f;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.2s;
+            display: inline-block;
+        }
+
+        .btn-portal:hover {
+            opacity: 0.9;
+        }
+
+        footer {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero-container">
+        <p style="letter-spacing: 2px; font-size: 0.9rem; color: var(--accent-color);">BLACKHILL · ART · SCIENCE · FREEDOM</p>
+        <h1>Mr. <span>Power</span> AI</h1>
+        <p>Kadir Karatepe’nin bağımsız araştırma arşivi, KKF modelleri ve teknoloji konseptleri için geliştirilmiş çok dilli yapay zekâ asistanı.</p>
+        <a href="https://kadir-karatepe-blackhill.blackhill.chatgpt.site" class="btn-portal" target="_blank">Ana Portföye Dön ↗</a>
+    </div>
+
+    <footer>
+        KADİR KARATEPE © 2026 · Wiener Neustadt · Austria<br>
+        <a href="admin.html">Yönetici Paneli</a>
+    </footer>
+
+    <!-- Mr. Power Widget Script Entegrasyonu -->
+    <script src="widget.js"></script>
+</body>
+</html>
