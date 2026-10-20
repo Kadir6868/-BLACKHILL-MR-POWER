@@ -1,1 +1,156 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BLACKHILL · Mr. Power</title>
+    <style>
+      :root {
+        --bg: #0d0d0f;
+        --card: #17171b;
+        --card-2: #1f1f24;
+        --text: #f4f4f5;
+        --muted: #a1a1aa;
+        --brand: #e5a93b;
+        --border: rgba(255,255,255,0.08);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .shell {
+        width: min(980px, 100%);
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+      }
+      .hero {
+        text-align: center;
+        margin-bottom: 18px;
+      }
+      .hero small {
+        letter-spacing: 2px;
+        color: var(--brand);
+      }
+      h1 {
+        margin: 12px 0 8px;
+        font-size: clamp(2rem, 5vw, 3rem);
+      }
+      h1 span { color: var(--brand); }
+      .subtitle {
+        color: var(--muted);
+        max-width: 700px;
+        margin: 0 auto 20px;
+        line-height: 1.6;
+      }
+      .chat-box {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 18px;
+      }
+      .messages {
+        min-height: 220px;
+        max-height: 400px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-right: 8px;
+      }
+      .message {
+        max-width: 80%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .message.user {
+        align-self: flex-end;
+        background: var(--brand);
+        color: #17171b;
+        font-weight: 600;
+      }
+      .message.assistant {
+        align-self: flex-start;
+        background: var(--card-2);
+        border: 1px solid var(--border);
+      }
+      form {
+        margin-top: 16px;
+        display: flex;
+        gap: 10px;
+      }
+      input {
+        flex: 1;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: rgba(255,255,255,0.02);
+        color: var(--text);
+        padding: 12px 14px;
+        font-size: 1rem;
+      }
+      button {
+        border: none;
+        border-radius: 10px;
+        background: var(--brand);
+        color: #161618;
+        padding: 12px 18px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .sources {
+        display: none;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .sources.show { display: block; }
+      .source-link {
+        color: var(--brand);
+        text-decoration: none;
+      }
+      @media (max-width: 640px) {
+        .shell { padding: 16px; }
+        form { flex-direction: column; }
+        button { width: 100%; }
+        .message { max-width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="hero">
+        <small>BLACKHILL · ART · SCIENCE · FREEDOM</small>
+        <h1>Mr. <span>Power</span> AI</h1>
+        <p class="subtitle">Kadir Karatepe’nin araştırma arşivi ve teknoloji konseptleri için geliştirilmiş çok dilli yapay zekâ asistanı.</p>
+      </div>
 
+      <div class="chat-box">
+        <div class="messages" id="messages">
+          <div class="message assistant">Merhaba! Ben Mr. Power. Sorularınızı sorabilirsiniz.</div>
+        </div>
+        <form id="chat-form">
+          <input id="message" name="message" type="text" placeholder="Sorunuz nedir?" autocomplete="off" />
+          <button type="submit">Gönder</button>
+        </form>
+        <div class="sources" id="sources"></div>
+      </div>
+    </div>
+
+    <script src="/widget.js"></script>
+  </body>
+</html>

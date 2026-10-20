@@ -2,7 +2,19 @@
   "name": "blackhill-mr-power",
   "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
-  "assets": {"directory": "./public", "binding": "ASSETS"},
-  "vars": {"ALLOWED_ORIGIN": "", "GROQ_MODEL": "llama-3.3-70b-versatile"},
-  "d1_databases": [{"binding":"DB","database_name":"mr-power-archive","database_id":"REPLACE_WITH_YOUR_D1_DATABASE_ID"}]
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "ALLOWED_ORIGIN": "",
+    "GROQ_MODEL": "llama-3.3-70b-versatile"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mr-power-archive",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+    }
+  ]
 }
