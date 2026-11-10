@@ -65,6 +65,7 @@ const CONFERENCE_MODELS = {
 async function callConferenceModel(id, messages, env) {
   const cfg = CONFERENCE_MODELS[id];
   const apiKey = env[cfg.key];
+  const modelName = env[id.toUpperCase() + '_MODEL'] || cfg.model;
   if (!apiKey) return { model: id, error: 'API anahtarı sunucuda tanımlı değil: ' + cfg.key };
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 55000);
@@ -86,7 +87,7 @@ async function callConferenceModel(id, messages, env) {
       response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: cfg.model, max_tokens: 1200, temperature: 0.4, system, messages: conversation }),
+        body: JSON.stringify({ model: modelName, max_tokens: 1200, temperature: 0.4, system, messages: conversation }),
         signal: controller.signal
       });
       data = await response.json();
@@ -94,7 +95,7 @@ async function callConferenceModel(id, messages, env) {
     } else {
       response = await fetch(cfg.url, {
         method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: cfg.model, temperature: 0.4, max_tokens: 1200, messages }),
+        body: JSON.stringify({ model: modelName, temperature: 0.4, max_tokens: 1200, messages }),
         signal: controller.signal
       });
       data = await response.json();
@@ -273,6 +274,11 @@ export default {
     if (env.ASSETS) {
       const assetResponse = await env.ASSETS.fetch(assetRequest);
       if (assetResponse.status !== 404) return assetResponse;
+    }
+
+
+    if (url.pathname === '/conference' || url.pathname === '/conference.html') {
+      return env.ASSETS ? env.ASSETS.fetch(new Request(new URL('/conference.html', request.url))) : new Response('Not found', { status: 404 });
     }
 
     if (url.pathname === '/' || url.pathname === '/index.html') {
