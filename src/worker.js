@@ -52,6 +52,97 @@ async function archiveSearch(db, question) {
   }
 }
 
+
+const CONFERENCE_MODELS = {
+  gpt: { label: 'GPT', provider: 'openai', model: 'gpt-4.1-mini', key: 'OPENAI_API_KEY', url: 'https://api.openai.com/v1/chat/completions' },
+  gemini: { label: 'Gemini', provider: 'gemini', model: 'gemini-2.5-flash', key: 'GEMINI_API_KEY' },
+  claude: { label: 'Claude', provider: 'anthropic', model: 'claude-sonnet-4-5', key: 'ANTHROPIC_API_KEY' },
+  deepseek: { label: 'DeepSeek', provider: 'openai', model: 'deepseek-chat', key: 'DEEPSEEK_API_KEY', url: 'https://api.deepseek.com/chat/completions' },
+  grok: { label: 'Grok', provider: 'openai', model: 'grok-3-mini', key: 'XAI_API_KEY', url: 'https://api.x.ai/v1/chat/completions' },
+  llama: { label: 'Llama', provider: 'openai', model: 'llama-3.3-70b-versatile', key: 'GROQ_API_KEY', url: 'https://api.groq.com/openai/v1/chat/completions' },
+};
+
+async function callConferenceModel(id, messages, env) {
+  const cfg = CONFERENCE_MODELS[id];
+  const apiKey = env[cfg.key];
+  if (!apiKey) return { model: id, error: 'API anahtarı sunucuda tanımlı değil: ' + cfg.key };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 55000);
+  try {
+    let response, data, answer = '';
+    if (cfg.provider === 'gemini') {
+      const contents = messages.filter(m => m.role !== 'system').map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
+      const system = messages.find(m => m.role === 'system')?.content || '';
+      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${apiKey}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { temperature: 0.4, maxOutputTokens: 1200 } }),
+        signal: controller.signal
+      });
+      data = await response.json();
+      answer = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('\n') || '';
+    } else if (cfg.provider === 'anthropic') {
+      const system = messages.find(m => m.role === 'system')?.content || '';
+      const conversation = messages.filter(m => m.role !== 'system');
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+        body: JSON.stringify({ model: cfg.model, max_tokens: 1200, temperature: 0.4, system, messages: conversation }),
+        signal: controller.signal
+      });
+      data = await response.json();
+      answer = data?.content?.filter(c => c.type === 'text').map(c => c.text).join('\n') || '';
+    } else {
+      response = await fetch(cfg.url, {
+        method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: cfg.model, temperature: 0.4, max_tokens: 1200, messages }),
+        signal: controller.signal
+      });
+      data = await response.json();
+      answer = data?.choices?.[0]?.message?.content || '';
+    }
+    if (!response.ok) return { model: id, error: data?.error?.message || data?.message || ('HTTP ' + response.status) };
+    return { model: id, answer: answer || 'Model boş yanıt döndürdü.' };
+  } catch (error) {
+    return { model: id, error: error.name === 'AbortError' ? 'Model zaman aşımına uğradı.' : String(error) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function runConference(body, env) {
+  const objective = typeof body.objective === 'string' ? body.objective.trim().slice(0, 5000) : '';
+  const participants = Array.isArray(body.participants) ? [...new Set(body.participants)].filter(id => Object.hasOwn(CONFERENCE_MODELS, id)).slice(0, 6) : [];
+  const rounds = Math.max(1, Math.min(3, Number(body.rounds) || 2));
+  if (objective.length < 5) return { status: 400, data: { error: 'Konferans hedefi en az 5 karakter olmalı.' } };
+  if (!participants.length) return { status: 400, data: { error: 'En az bir geçerli model seçilmeli.' } };
+
+  const roundResults = [];
+  let previous = [];
+  for (let round = 1; round <= rounds; round++) {
+    const system = round === 1
+      ? 'BLACKHILL AI CONFERENCE katılımcısısın. Kendi uzmanlık rolünden bağımsız bir çözüm üret. Varsayımlarını, mimariyi, riskleri ve test edilebilir başarı ölçütlerini açıkla. Türkçe yanıt ver.'
+      : 'BLACKHILL AI CONFERENCE ikinci/sonraki turundasın. Diğer modellerin görüşlerini eleştirel değerlendir; güçlü noktaları koru, hataları düzelt, anlaşmazlıkları açıkla ve daha iyi bir çözüm öner. Türkçe yanıt ver.';
+    const reviewContext = previous.map(p => '[' + p.model + '] ' + (p.answer || p.error || '')).join('\n\n').slice(0, 12000);
+    const responses = await Promise.all(participants.map(id => callConferenceModel(id, [
+      { role: 'system', content: system },
+      { role: 'user', content: 'Konferans hedefi:\n' + objective + (round > 1 ? '\n\nÖnceki tur görüşleri:\n' + reviewContext : '') }
+    ], env)));
+    roundResults.push({ round, responses });
+    previous = responses.filter(x => x.answer);
+  }
+
+  let synthesis = { error: 'Sentez oluşturulamadı; GROQ_API_KEY yapılandırmasını kontrol edin.' };
+  if (env.GROQ_API_KEY) {
+    const transcript = roundResults.map(r => 'TUR ' + r.round + '\n' + r.responses.map(x => x.model + ': ' + (x.answer || x.error)).join('\n\n')).join('\n\n').slice(0, 24000);
+    const final = await callConferenceModel('llama', [
+      { role: 'system', content: 'Sen Mr. Power, BLACKHILL konferans koordinatörüsün. Görüşleri tarafsız sentezle. Kanıtlanmamış iddiaları gerçek gibi sunma. Ortak kararları, anlaşmazlıkları, teknik riskleri, uygulanabilir mimariyi ve sonraki testleri Türkçe yaz.' },
+      { role: 'user', content: 'Hedef: ' + objective + '\n\nKonferans dökümü:\n' + transcript + '\n\nOrtak sentezi hazırla.' }
+    ], env);
+    synthesis = final.answer ? { answer: final.answer } : { error: final.error };
+  }
+  return { status: 200, data: { ok: true, objective, rounds: roundResults, synthesis, notice: 'Yalnızca sunucuda API anahtarı tanımlı modeller yanıt verebilir. Sonuçlar bağımsız model çıktılarıdır; otomatik doğrulanmış gerçekler değildir.' } };
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -64,6 +155,17 @@ export default {
 
     if (url.pathname === '/api/health') {
       return json({ ok: true, service: 'blackhill-mr-power', model: env.GROQ_MODEL || 'llama-3.3-70b-versatile' }, 200, headers);
+    }
+
+
+    if (url.pathname === '/api/conference' && request.method === 'POST') {
+      if (origin && !headers['Access-Control-Allow-Origin'] && origin !== url.origin) {
+        return json({ error: 'Origin not allowed' }, 403, headers);
+      }
+      let body;
+      try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400, headers); }
+      const result = await runConference(body, env);
+      return json(result.data, result.status, headers);
     }
 
     if (url.pathname === '/api/chat' && request.method === 'POST') {
